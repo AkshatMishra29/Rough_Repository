@@ -1,0 +1,1692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PromptArena — Competitive Prompt Engineering</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&family=Bricolage+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg0:#06060A;--bg1:#0C0C12;--bg2:#12121A;--bg3:#181820;--bg4:#1E1E28;--bg5:#242430;
+  --border:#252532;--border2:#2E2E3C;
+  --amber:#F5B731;--amber2:#F5B73120;--amber3:#F5B73108;
+  --teal:#00DDB4;--teal2:#00DDB420;--teal3:#00DDB408;
+  --violet:#9B7FFF;--violet2:#9B7FFF20;--violet3:#9B7FFF08;
+  --red:#FF5757;--red2:#FF575720;
+  --text1:#EDEAE0;--text2:#80809A;--text3:#40404E;--text4:#282830;
+  --r4:4px;--r6:6px;--r8:8px;--r10:10px;--r12:12px;--r16:16px;
+}
+html,body{height:100%;background:var(--bg0);color:var(--text1);font-family:'Bricolage Grotesque',sans-serif;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+button{cursor:pointer;font-family:'Bricolage Grotesque',sans-serif}
+input,textarea{font-family:'JetBrains Mono',monospace}
+.mono{font-family:'JetBrains Mono',monospace}
+.syne{font-family:'Syne',sans-serif}
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+
+/* ─── PAGE SYSTEM ─── */
+.page{display:none;min-height:100vh;animation:fadeUp .35s ease}
+.page.active{display:flex;flex-direction:column}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ─── NAV ─── */
+nav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 32px;height:56px;
+  border-bottom:1px solid var(--border);
+  background:rgba(6,6,10,0.92);backdrop-filter:blur(16px);
+  position:sticky;top:0;z-index:200;flex-shrink:0;
+}
+.nav-logo{display:flex;align-items:center;gap:10px;cursor:pointer}
+.nav-logo-hex{
+  width:30px;height:30px;
+  background:var(--amber);
+  clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:13px;color:#000;
+}
+.nav-logo-text{font-family:'Syne',sans-serif;font-weight:800;font-size:17px;letter-spacing:-.4px}
+.nav-logo-text em{color:var(--amber);font-style:normal}
+.nav-center{display:flex;align-items:center;gap:2px}
+.nav-link{background:none;border:none;color:var(--text2);font-size:13px;padding:6px 14px;border-radius:var(--r6);transition:.15s;font-family:'Bricolage Grotesque',sans-serif}
+.nav-link:hover,.nav-link.active{color:var(--text1);background:var(--bg3)}
+.nav-right{display:flex;align-items:center;gap:10px}
+.nav-user-pill{
+  display:flex;align-items:center;gap:8px;
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:99px;padding:4px 14px 4px 6px;cursor:pointer;
+  transition:.15s;font-size:13px;
+}
+.nav-user-pill:hover{border-color:var(--border2)}
+.nav-avatar{width:26px;height:26px;border-radius:50%;background:var(--amber);color:#000;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif}
+.nav-btn{
+  background:var(--amber);color:#000;border:none;
+  font-family:'Syne',sans-serif;font-weight:700;font-size:12px;
+  padding:7px 18px;border-radius:var(--r6);transition:.15s;letter-spacing:.2px;
+}
+.nav-btn:hover{opacity:.88;transform:translateY(-1px)}
+.nav-ghost{background:none;border:1px solid var(--border);color:var(--text2);font-size:13px;padding:6px 16px;border-radius:var(--r6);transition:.15s}
+.nav-ghost:hover{border-color:var(--border2);color:var(--text1)}
+
+/* ─── UTILITY ─── */
+.tag{
+  display:inline-flex;align-items:center;gap:5px;
+  font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.8px;
+  padding:3px 10px;border-radius:99px;
+}
+.tag-amber{background:var(--amber2);color:var(--amber);border:1px solid var(--amber2)}
+.tag-teal{background:var(--teal2);color:var(--teal);border:1px solid var(--teal2)}
+.tag-violet{background:var(--violet2);color:var(--violet);border:1px solid var(--violet2)}
+.tag-red{background:var(--red2);color:var(--red);border:1px solid var(--red2)}
+.tag-dim{background:var(--bg3);color:var(--text3);border:1px solid var(--border)}
+.pulse{animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.dot{width:6px;height:6px;border-radius:50%;display:inline-block}
+.dot-amber{background:var(--amber)}
+.dot-teal{background:var(--teal)}
+.dot-violet{background:var(--violet)}
+
+.btn-primary{
+  background:var(--amber);color:#000;border:none;
+  font-family:'Syne',sans-serif;font-weight:700;font-size:14px;
+  padding:11px 24px;border-radius:var(--r8);transition:.2s;
+}
+.btn-primary:hover{opacity:.88;transform:translateY(-2px);box-shadow:0 12px 28px #F5B73130}
+.btn-outline{background:none;border:1px solid var(--border2);color:var(--text2);font-size:13px;padding:10px 20px;border-radius:var(--r8);transition:.15s}
+.btn-outline:hover{border-color:var(--text3);color:var(--text1)}
+.btn-ghost2{background:none;border:none;color:var(--text3);font-size:12px;padding:6px 10px;border-radius:var(--r6);transition:.15s;font-family:'JetBrains Mono',monospace}
+.btn-ghost2:hover{color:var(--text2);background:var(--bg3)}
+
+/* ─── SECTION WRAPPER ─── */
+.section{padding:0 40px}
+.section-max{max-width:1200px;margin:0 auto}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   PAGE 1 — LOGIN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+#page-login{flex-direction:row;min-height:100vh;overflow:hidden}
+.login-left{
+  flex:1;background:var(--bg1);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;justify-content:space-between;
+  padding:40px;position:relative;overflow:hidden;
+}
+.login-left-grid{
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(var(--border) 1px,transparent 1px),
+    linear-gradient(90deg,var(--border) 1px,transparent 1px);
+  background-size:48px 48px;opacity:.5;pointer-events:none;
+}
+.login-left-glow{
+  position:absolute;top:-120px;left:-80px;
+  width:400px;height:400px;border-radius:50%;
+  background:radial-gradient(circle,#F5B73112 0%,transparent 70%);
+  pointer-events:none;
+}
+.login-brand{position:relative;z-index:1}
+.login-brand-title{font-family:'Syne',sans-serif;font-weight:800;font-size:52px;line-height:1;letter-spacing:-2px;margin-bottom:16px}
+.login-brand-title em{color:var(--amber);font-style:normal;display:block}
+.login-brand-sub{color:var(--text2);font-size:15px;line-height:1.6;max-width:360px}
+.login-stats{position:relative;z-index:1;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.login-stat{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r12);padding:18px 20px}
+.login-stat-num{font-family:'Syne',sans-serif;font-weight:800;font-size:28px;line-height:1}
+.login-stat-num.a{color:var(--amber)}.login-stat-num.t{color:var(--teal)}.login-stat-num.v{color:var(--violet)}
+.login-stat-label{font-size:11px;color:var(--text3);margin-top:4px;font-family:'JetBrains Mono',monospace;letter-spacing:.5px}
+.login-right{
+  width:460px;display:flex;flex-direction:column;justify-content:center;
+  padding:60px 48px;background:var(--bg0);
+}
+.login-form-title{font-family:'Syne',sans-serif;font-weight:800;font-size:28px;margin-bottom:6px}
+.login-form-sub{color:var(--text2);font-size:14px;margin-bottom:32px}
+.form-group{margin-bottom:18px}
+.form-label{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;letter-spacing:.8px;display:block;margin-bottom:7px}
+.form-input{
+  width:100%;background:var(--bg2);border:1px solid var(--border);
+  color:var(--text1);font-family:'JetBrains Mono',monospace;font-size:13px;
+  padding:12px 14px;border-radius:var(--r8);outline:none;transition:.2s;
+}
+.form-input:focus{border-color:rgba(245,183,49,.4);background:var(--bg1)}
+.form-input::placeholder{color:var(--text3)}
+.form-divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--text3);font-size:11px;font-family:'JetBrains Mono',monospace}
+.form-divider::before,.form-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.login-switch{text-align:center;margin-top:20px;font-size:13px;color:var(--text2)}
+.login-switch span{color:var(--amber);cursor:pointer;font-weight:500}
+.login-switch span:hover{text-decoration:underline}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   PAGE 2 — MAIN LANDING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.hero{
+  padding:80px 40px 60px;position:relative;overflow:hidden;
+  border-bottom:1px solid var(--border);
+}
+.hero-bg-grid{
+  position:absolute;inset:0;
+  background-image:radial-gradient(var(--border2) 1px,transparent 1px);
+  background-size:32px 32px;opacity:.6;pointer-events:none;
+}
+.hero-bg-fade{
+  position:absolute;inset:0;
+  background:linear-gradient(180deg,transparent 50%,var(--bg0) 100%);
+  pointer-events:none;
+}
+.hero-orb1{position:absolute;top:-200px;right:-100px;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,#F5B73108 0%,transparent 65%);pointer-events:none}
+.hero-orb2{position:absolute;bottom:-300px;left:-150px;width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,#00DDB408 0%,transparent 65%);pointer-events:none}
+.hero-inner{max-width:1200px;margin:0 auto;position:relative;z-index:1}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--bg2);border:1px solid var(--border2);
+  color:var(--text2);font-size:12px;padding:5px 12px;border-radius:99px;
+  margin-bottom:24px;font-family:'JetBrains Mono',monospace;
+}
+.hero-h1{font-family:'Syne',sans-serif;font-weight:800;font-size:72px;line-height:1;letter-spacing:-3px;margin-bottom:22px}
+.hero-h1 .ln1{display:block}.hero-h1 .amber{color:var(--amber)}.hero-h1 .teal{color:var(--teal)}
+.hero-sub{font-size:17px;color:var(--text2);line-height:1.6;max-width:540px;margin-bottom:36px}
+.hero-cta{display:flex;align-items:center;gap:12px;margin-bottom:56px;flex-wrap:wrap}
+.hero-stats{display:flex;gap:0;background:var(--bg1);border:1px solid var(--border);border-radius:var(--r12);overflow:hidden;width:fit-content}
+.h-stat{padding:16px 28px;border-right:1px solid var(--border);text-align:center}
+.h-stat:last-child{border-right:none}
+.h-stat-n{font-family:'Syne',sans-serif;font-weight:800;font-size:26px}
+.h-stat-n.a{color:var(--amber)}.h-stat-n.t{color:var(--teal)}.h-stat-n.v{color:var(--violet)}
+.h-stat-l{font-size:10px;color:var(--text3);margin-top:3px;font-family:'JetBrains Mono',monospace;letter-spacing:.6px}
+
+/* How it works */
+.how-section{padding:60px 40px;border-bottom:1px solid var(--border)}
+.how-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1200px;margin:32px auto 0}
+.how-card{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r12);padding:28px;position:relative;overflow:hidden;transition:.2s}
+.how-card:hover{border-color:var(--border2);transform:translateY(-2px)}
+.how-num{font-family:'Syne',sans-serif;font-weight:800;font-size:80px;color:var(--bg3);line-height:1;position:absolute;top:12px;right:20px;pointer-events:none;user-select:none}
+.how-icon{font-size:28px;margin-bottom:14px}
+.how-title{font-family:'Syne',sans-serif;font-weight:700;font-size:18px;margin-bottom:8px}
+.how-desc{font-size:13px;color:var(--text2);line-height:1.6}
+
+/* Featured problems */
+.featured-section{padding:60px 40px;border-bottom:1px solid var(--border)}
+.feat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;max-width:1200px;margin:28px auto 0}
+.feat-card{
+  background:var(--bg1);border:1px solid var(--border);border-radius:var(--r12);
+  padding:22px;cursor:pointer;transition:.2s;position:relative;overflow:hidden;
+}
+.feat-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--amber);opacity:0;transition:.2s}
+.feat-card:hover{border-color:rgba(245,183,49,.25);transform:translateY(-3px)}
+.feat-card:hover::after{opacity:1}
+.feat-cat{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+.feat-title{font-family:'Syne',sans-serif;font-weight:700;font-size:15px;line-height:1.3;margin-bottom:10px}
+.feat-desc{font-size:12px;color:var(--text2);line-height:1.5;margin-bottom:14px}
+.feat-footer{display:flex;align-items:center;justify-content:space-between}
+.feat-subs{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace}
+.feat-champ{font-size:10px;color:var(--teal);background:var(--teal3);border:1px solid var(--teal2);padding:2px 8px;border-radius:99px;font-family:'JetBrains Mono',monospace}
+
+/* Section header */
+.sec-header{display:flex;align-items:baseline;gap:12px;max-width:1200px;margin:0 auto}
+.sec-title{font-family:'Syne',sans-serif;font-weight:800;font-size:22px}
+.sec-sub{color:var(--text3);font-size:12px;font-family:'JetBrains Mono',monospace}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   PAGE 3 — PROBLEMS LIST
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.problems-layout{display:flex;flex:1;overflow:hidden}
+.problems-sidebar{
+  width:240px;border-right:1px solid var(--border);
+  padding:24px 20px;background:var(--bg1);flex-shrink:0;overflow-y:auto;
+}
+.ps-title{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px}
+.filter-group{margin-bottom:24px}
+.filter-label{font-size:11px;color:var(--text2);margin-bottom:8px;font-family:'Syne',sans-serif;font-weight:600}
+.filter-btn{
+  display:block;width:100%;text-align:left;
+  background:none;border:none;color:var(--text2);font-size:12px;
+  padding:6px 10px;border-radius:var(--r6);transition:.15s;margin-bottom:2px;
+  font-family:'Bricolage Grotesque',sans-serif;
+}
+.filter-btn:hover,.filter-btn.on{color:var(--text1);background:var(--bg3)}
+.filter-btn.on{color:var(--amber)}
+.problems-main{flex:1;overflow-y:auto;padding:28px 32px}
+.problems-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+.prob-search{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r8);padding:9px 14px;color:var(--text1);
+  font-size:13px;width:260px;outline:none;transition:.2s;
+  font-family:'JetBrains Mono',monospace;
+}
+.prob-search:focus{border-color:var(--border2)}
+.prob-search::placeholder{color:var(--text3)}
+.prob-sort{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r8);padding:8px 12px;color:var(--text2);font-size:12px;outline:none;font-family:'JetBrains Mono',monospace}
+.problems-grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.prob-card2{
+  background:var(--bg1);border:1px solid var(--border);border-radius:var(--r12);
+  padding:24px;cursor:pointer;transition:.2s;
+}
+.prob-card2:hover{border-color:rgba(245,183,49,.2);background:var(--bg2)}
+.pc2-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.pc2-cat{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:.8px;text-transform:uppercase}
+.pc2-title{font-family:'Syne',sans-serif;font-weight:700;font-size:17px;line-height:1.25;margin-bottom:8px}
+.pc2-desc{font-size:13px;color:var(--text2);line-height:1.55;margin-bottom:16px}
+.pc2-footer{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pc2-stat{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   PAGE 4 — PROBLEM + TERMINAL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.terminal-layout{display:flex;flex:1;overflow:hidden}
+.problem-panel{width:420px;flex-shrink:0;border-right:1px solid var(--border);overflow-y:auto;background:var(--bg1)}
+.pp-header{padding:20px 24px;border-bottom:1px solid var(--border)}
+.pp-back{background:none;border:none;color:var(--text3);font-size:11px;font-family:'JetBrains Mono',monospace;cursor:pointer;display:flex;align-items:center;gap:5px;margin-bottom:14px;padding:0;transition:.15s}
+.pp-back:hover{color:var(--text2)}
+.pp-tag{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:.8px;margin-bottom:7px}
+.pp-title{font-family:'Syne',sans-serif;font-weight:800;font-size:22px;line-height:1.2;margin-bottom:10px}
+.pp-desc{font-size:13px;color:var(--text2);line-height:1.6}
+.pp-body{padding:20px 24px}
+.pp-section-title{font-family:'Syne',sans-serif;font-weight:600;font-size:13px;margin-bottom:10px;display:flex;align-items:center;gap:8px;color:var(--text2)}
+.pp-section-title span{height:1px;flex:1;background:var(--border)}
+.doc-collapse{
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r8);
+  overflow:hidden;margin-bottom:18px;
+}
+.doc-collapse-btn{
+  width:100%;background:none;border:none;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 14px;color:var(--text2);font-size:12px;cursor:pointer;
+  font-family:'JetBrains Mono',monospace;transition:.15s;
+}
+.doc-collapse-btn:hover{color:var(--text1);background:var(--bg3)}
+.doc-content{padding:14px;font-size:12px;color:var(--text2);line-height:1.7;border-top:1px solid var(--border);font-family:'JetBrains Mono',monospace;display:none}
+.doc-content.open{display:block}
+.scoring-rules{margin-bottom:16px}
+.rule-item{display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text2)}
+.rule-item:last-child{border-bottom:none}
+.rule-sign{font-family:'JetBrains Mono',monospace;font-weight:600;width:14px;flex-shrink:0}
+.rule-sign.plus{color:var(--teal)}.rule-sign.minus{color:var(--red)}
+.tips-panel{background:var(--amber3);border:1px solid rgba(245,183,49,.12);border-radius:var(--r8);padding:14px}
+.tips-header{font-size:10px;color:var(--amber);font-family:'JetBrains Mono',monospace;letter-spacing:.8px;margin-bottom:10px}
+
+/* Terminal panel */
+.terminal-panel{flex:1;display:flex;flex-direction:column;background:var(--bg0);overflow:hidden}
+.terminal-topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;height:44px;border-bottom:1px solid var(--border);
+  background:var(--bg1);flex-shrink:0;
+}
+.terminal-dots{display:flex;gap:7px;align-items:center}
+.tdot{width:10px;height:10px;border-radius:50%}
+.tdot-r{background:#FF5F57}.tdot-y{background:#FFBD2E}.tdot-g{background:#28C840}
+.terminal-title{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);letter-spacing:.5px}
+.terminal-actions{display:flex;align-items:center;gap:8px}
+.terminal-body{flex:1;display:flex;flex-direction:column;padding:20px;overflow:hidden}
+.terminal-prompt-area{flex:1;position:relative;margin-bottom:14px;display:flex;flex-direction:column}
+.prompt-line{
+  display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;
+}
+.prompt-marker{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--amber);margin-top:13px;flex-shrink:0}
+.prompt-textarea{
+  flex:1;background:var(--bg1);border:1px solid var(--border);
+  border-radius:var(--r8);color:var(--text1);
+  font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.7;
+  padding:14px 16px;resize:none;height:200px;outline:none;transition:.2s;
+}
+.prompt-textarea:focus{border-color:rgba(245,183,49,.35);background:var(--bg2)}
+.prompt-textarea::placeholder{color:var(--text3)}
+.prompt-meta{display:flex;align-items:center;justify-content:space-between;padding:8px 2px}
+.pm-left{display:flex;gap:14px}
+.pm-stat{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px}
+.pm-stat span{color:var(--text2)}
+.submit-bar{background:var(--bg1);border-top:1px solid var(--border);padding:14px 20px;flex-shrink:0;display:flex;align-items:center;gap:12px}
+.submit-btn-main{
+  flex:1;background:var(--amber);color:#000;border:none;
+  font-family:'Syne',sans-serif;font-weight:700;font-size:14px;
+  padding:12px;border-radius:var(--r8);cursor:pointer;transition:.2s;
+}
+.submit-btn-main:hover{opacity:.88;box-shadow:0 8px 24px #F5B73125}
+
+/* Score preview sidebar */
+.score-preview{
+  width:220px;flex-shrink:0;background:var(--bg1);border-left:1px solid var(--border);
+  padding:20px;overflow-y:auto;
+}
+.sp-title{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:16px}
+.sp-item{margin-bottom:16px}
+.sp-label{font-size:11px;color:var(--text2);margin-bottom:5px;display:flex;justify-content:space-between}
+.sp-label strong{font-family:'Syne',sans-serif;font-weight:700;color:var(--text1)}
+.sp-bar{height:4px;background:var(--bg3);border-radius:99px;overflow:hidden}
+.sp-fill{height:100%;border-radius:99px;transition:width 1s ease}
+.sp-fill-a{background:var(--violet)}.sp-fill-b{background:var(--teal)}.sp-fill-c{background:var(--amber)}.sp-fill-d{background:var(--red)}
+.sp-total{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r8);padding:14px;margin-top:20px;text-align:center}
+.sp-total-n{font-family:'Syne',sans-serif;font-weight:800;font-size:32px;color:var(--amber)}
+.sp-total-l{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:2px}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   PAGE 5 — RESULT + LEADERBOARD
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.result-layout{display:grid;grid-template-columns:1fr 1fr;flex:1;overflow:hidden}
+.result-left{overflow-y:auto;padding:32px;border-right:1px solid var(--border)}
+.result-right{overflow-y:auto;padding:32px;background:var(--bg1)}
+.result-score-hero{
+  background:var(--bg1);border:1px solid var(--border);
+  border-radius:var(--r16);padding:32px;text-align:center;margin-bottom:20px;
+  position:relative;overflow:hidden;
+}
+.rsh-bg{position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,#F5B73108 0%,transparent 60%);pointer-events:none}
+.score-circle{
+  width:130px;height:130px;border-radius:50%;margin:0 auto 20px;
+  background:conic-gradient(var(--amber) 0% calc(var(--pct)*1%),var(--bg3) calc(var(--pct)*1%));
+  display:flex;align-items:center;justify-content:center;position:relative;
+}
+.score-circle-inner{
+  width:98px;height:98px;border-radius:50%;background:var(--bg1);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+.sc-num{font-family:'Syne',sans-serif;font-weight:800;font-size:30px;color:var(--amber);line-height:1}
+.sc-max{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace}
+.rsh-title{font-family:'Syne',sans-serif;font-weight:800;font-size:26px;margin-bottom:6px}
+.rsh-sub{color:var(--text2);font-size:13px}
+.breakdown-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.bcard{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r10);padding:18px}
+.bc-l{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:7px}
+.bc-n{font-family:'Syne',sans-serif;font-weight:800;font-size:26px;line-height:1;margin-bottom:8px}
+.bc-bar2{height:3px;background:var(--bg3);border-radius:99px;overflow:hidden}
+.bc-bar2-fill{height:100%;border-radius:99px}
+.gemini-output{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r10);padding:18px;margin-bottom:20px}
+.go-header{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.go-badge{background:var(--violet2);border:1px solid var(--violet2);color:var(--violet);font-size:10px;font-family:'JetBrains Mono',monospace;padding:2px 8px;border-radius:99px;letter-spacing:.5px}
+.go-text{font-size:13px;color:var(--text2);line-height:1.7;font-family:'JetBrains Mono',monospace}
+.result-rank-badge{
+  background:var(--teal3);border:1px solid var(--teal2);
+  border-radius:var(--r10);padding:14px 18px;
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;
+}
+.rrb-label{font-size:13px;color:var(--text2)}
+.rrb-val{font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:var(--teal)}
+.result-actions{display:flex;gap:10px}
+
+/* Leaderboard right side */
+.lb-tab-row{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap}
+.lb-tab{background:var(--bg2);border:1px solid var(--border);color:var(--text2);font-size:11px;padding:6px 14px;border-radius:var(--r6);cursor:pointer;transition:.15s;font-family:'JetBrains Mono',monospace}
+.lb-tab.on{background:var(--amber);border-color:var(--amber);color:#000;font-weight:600}
+.champion-box{
+  background:rgba(245,183,49,.05);border:1px solid rgba(245,183,49,.18);
+  border-radius:var(--r12);padding:18px 20px;margin-bottom:16px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.champ-info{display:flex;align-items:center;gap:12px}
+.champ-crown{font-size:24px;line-height:1}
+.champ-name{font-family:'Syne',sans-serif;font-weight:700;font-size:16px}
+.champ-sub{font-size:11px;color:var(--amber);font-family:'JetBrains Mono',monospace;letter-spacing:.5px}
+.champ-score-big{font-family:'Syne',sans-serif;font-weight:800;font-size:32px;color:var(--amber)}
+.lb-table{width:100%}
+.lb-thead-row{display:grid;grid-template-columns:36px 1fr 72px 72px 80px;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);margin-bottom:4px}
+.lb-th{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:.8px;text-transform:uppercase}
+.lb-th:last-child{text-align:right}
+.lb-row2{display:grid;grid-template-columns:36px 1fr 72px 72px 80px;gap:8px;padding:10px 14px;border-radius:var(--r8);align-items:center;cursor:pointer;transition:.15s}
+.lb-row2:hover{background:var(--bg2)}
+.lb-row2.you{background:rgba(0,221,180,.05);border:1px solid rgba(0,221,180,.12)}
+.lb-rank-cell{font-family:'Syne',sans-serif;font-weight:700;font-size:13px}
+.r1{color:var(--amber)}.r2{color:#B0B0B8}.r3{color:#CD9F5A}.rn{color:var(--text3)}
+.lb-user-cell{display:flex;align-items:center;gap:9px}
+.lb-av{width:28px;height:28px;border-radius:50%;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif}
+.lb-uname{font-size:13px;font-weight:500}
+.lb-you-tag{font-size:10px;color:var(--teal);background:var(--teal3);border:1px solid var(--teal2);padding:1px 6px;border-radius:99px;font-family:'JetBrains Mono',monospace;margin-left:4px}
+.lb-score-cell{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2)}
+.lb-final-cell{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--amber);text-align:right}
+.phase-strip{background:var(--violet3);border:1px solid var(--violet2);border-radius:var(--r8);padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2)}
+.phase-strip-icon{color:var(--violet);font-size:13px}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   PAGE 6 — USER DASHBOARD
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.dashboard-layout{display:flex;flex:1;overflow:hidden}
+.dash-sidebar{width:260px;flex-shrink:0;border-right:1px solid var(--border);padding:24px 20px;background:var(--bg1);overflow-y:auto}
+.dash-main{flex:1;overflow-y:auto;padding:28px 32px}
+.user-profile-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r12);padding:22px;margin-bottom:20px;text-align:center}
+.user-avatar-large{
+  width:64px;height:64px;border-radius:50%;background:var(--amber);
+  font-family:'Syne',sans-serif;font-weight:800;font-size:24px;color:#000;
+  display:flex;align-items:center;justify-content:center;margin:0 auto 12px;
+  border:2px solid rgba(245,183,49,.3);
+}
+.user-name{font-family:'Syne',sans-serif;font-weight:700;font-size:17px}
+.user-handle{color:var(--text3);font-size:12px;font-family:'JetBrains Mono',monospace;margin:3px 0 10px}
+.user-rank-tag{background:var(--amber2);border:1px solid var(--amber2);color:var(--amber);font-size:11px;font-family:'JetBrains Mono',monospace;padding:3px 12px;border-radius:99px;display:inline-block}
+.dash-mini-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.dms{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r10);padding:14px;text-align:center}
+.dms-n{font-family:'Syne',sans-serif;font-weight:800;font-size:20px}
+.dms-n.a{color:var(--amber)}.dms-n.t{color:var(--teal)}.dms-n.v{color:var(--violet)}
+.dms-l{font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:3px}
+.dash-nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--r6);cursor:pointer;transition:.15s;font-size:13px;color:var(--text2);margin-bottom:2px}
+.dash-nav-item:hover,.dash-nav-item.on{color:var(--text1);background:var(--bg3)}
+.dash-nav-item.on{color:var(--amber)}
+.dash-nav-icon{font-size:14px;width:18px;text-align:center}
+
+/* Dashboard main content */
+.dash-section{margin-bottom:32px}
+.dash-sec-title{font-family:'Syne',sans-serif;font-weight:700;font-size:16px;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.dash-sec-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.overview-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px}
+.ov-card{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r12);padding:20px;position:relative;overflow:hidden}
+.ov-card-accent{position:absolute;top:0;left:0;right:0;height:3px}
+.ov-n{font-family:'Syne',sans-serif;font-weight:800;font-size:34px;line-height:1;margin-bottom:6px}
+.ov-l{font-size:12px;color:var(--text2);margin-bottom:12px}
+.ov-change{font-size:11px;font-family:'JetBrains Mono',monospace;display:flex;align-items:center;gap:4px}
+.ov-change.up{color:var(--teal)}.ov-change.down{color:var(--red)}
+
+/* Problem progress bars */
+.progress-list{display:flex;flex-direction:column;gap:14px}
+.prog-item{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r10);padding:16px 18px}
+.prog-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.prog-name{font-family:'Syne',sans-serif;font-weight:600;font-size:14px}
+.prog-score{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--amber);font-weight:600}
+.prog-bar-outer{height:6px;background:var(--bg3);border-radius:99px;overflow:hidden}
+.prog-bar-inner{height:100%;border-radius:99px;background:var(--amber);transition:width .8s ease}
+.prog-meta{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+.prog-meta-l{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace}
+.prog-meta-r{display:flex;gap:6px}
+
+/* History table */
+.hist-table{width:100%}
+.hist-thead{display:grid;grid-template-columns:1fr 80px 80px 80px 100px;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border)}
+.hist-th{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:.8px;text-transform:uppercase}
+.hist-row{display:grid;grid-template-columns:1fr 80px 80px 80px 100px;gap:8px;padding:11px 14px;border-bottom:1px solid var(--border);align-items:center;cursor:pointer;transition:.15s}
+.hist-row:hover{background:var(--bg2)}
+.hist-prob{font-size:13px;font-weight:500}
+.hist-cell{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2)}
+.hist-final{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--amber)}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   PAGE 7 — ENTERPRISE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.enterprise-layout{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg0)}
+.ent-topbar{
+  padding:0 32px;height:60px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--bg1);flex-shrink:0;
+}
+.ent-meta{display:flex;align-items:center;gap:20px}
+.ent-title-bar{font-family:'Syne',sans-serif;font-weight:700;font-size:16px}
+.ent-session{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);letter-spacing:.5px}
+.ent-timer{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:500;color:var(--amber);letter-spacing:1px}
+.ent-participants{
+  display:flex;align-items:center;gap:8px;
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r8);padding:6px 14px;
+}
+.ent-part-count{font-family:'Syne',sans-serif;font-weight:700;font-size:16px;color:var(--teal)}
+.ent-part-label{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace}
+
+.ent-body{flex:1;display:grid;grid-template-columns:1fr 1fr;overflow:hidden}
+.ent-left{border-right:1px solid var(--border);overflow-y:auto;padding:28px}
+.ent-right{overflow:hidden;display:flex;flex-direction:column;background:var(--bg0)}
+
+.quiz-progress{display:flex;align-items:center;gap:10px;margin-bottom:24px}
+.quiz-step{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);cursor:pointer;transition:.15s;flex-shrink:0}
+.quiz-step.done{background:var(--teal);border-color:var(--teal);color:#000;font-weight:600}
+.quiz-step.current{background:var(--amber);border-color:var(--amber);color:#000;font-weight:600}
+.quiz-step-line{flex:1;height:1px;background:var(--border)}
+.quiz-step-line.done{background:var(--teal)}
+
+.ent-q-num{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--amber);letter-spacing:.8px;margin-bottom:8px}
+.ent-q-text{font-family:'Syne',sans-serif;font-weight:700;font-size:22px;line-height:1.3;margin-bottom:16px}
+.ent-q-desc{font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:22px}
+.ent-constraints{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r10);padding:16px;margin-bottom:20px}
+.ent-con-title{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:.8px;margin-bottom:10px}
+.ent-con-item{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--text2);padding:4px 0}
+.ent-con-key{color:var(--amber);font-family:'JetBrains Mono',monospace;flex-shrink:0;font-size:11px}
+.ent-doc{background:var(--bg3);border-radius:var(--r8);padding:14px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2);line-height:1.6;max-height:200px;overflow-y:auto}
+
+/* Enterprise terminal */
+.ent-terminal{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.ent-term-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 20px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.ent-term-title{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2);display:flex;align-items:center;gap:8px}
+.ent-term-body{flex:1;padding:20px;display:flex;flex-direction:column;gap:14px;overflow:hidden}
+.ent-prompt-area{
+  flex:1;background:var(--bg1);border:1px solid var(--border);border-radius:var(--r8);
+  padding:16px;font-family:'JetBrains Mono',monospace;font-size:13px;
+  color:var(--text1);resize:none;outline:none;line-height:1.7;transition:.2s;
+}
+.ent-prompt-area:focus{border-color:rgba(245,183,49,.3)}
+.ent-prompt-area::placeholder{color:var(--text4)}
+.ent-term-footer{display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.ent-submit-bar{background:var(--bg1);border-top:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.ent-next-btn{background:var(--teal);color:#000;border:none;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;padding:10px 22px;border-radius:var(--r8);cursor:pointer;transition:.15s}
+.ent-next-btn:hover{opacity:.88}
+.live-feed{display:flex;flex-direction:column;gap:6px;max-height:120px;overflow:hidden}
+.live-item{display:flex;align-items:center;gap:10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);padding:6px 10px;background:var(--bg2);border-radius:var(--r6);animation:slideIn .3s ease}
+@keyframes slideIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+.live-user{color:var(--text2)}.live-score{color:var(--teal);margin-left:auto;font-weight:600}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   PAGE 8 — EXPLORE / LEADERBOARD GLOBAL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.explore-layout{flex:1;overflow-y:auto;padding:40px}
+.explore-max{max-width:1100px;margin:0 auto}
+.explore-hero{
+  background:var(--bg1);border:1px solid var(--border);border-radius:var(--r16);
+  padding:36px;margin-bottom:28px;position:relative;overflow:hidden;
+}
+.exp-hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 80% 50%,#00DDB408 0%,transparent 60%);pointer-events:none}
+.exp-hero-title{font-family:'Syne',sans-serif;font-weight:800;font-size:36px;margin-bottom:8px;position:relative}
+.exp-hero-sub{color:var(--text2);font-size:15px;position:relative}
+.global-lb-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.global-lb-title{font-family:'Syne',sans-serif;font-weight:700;font-size:20px}
+.global-lb-row{
+  display:grid;grid-template-columns:44px 1fr 100px 100px 100px 100px;
+  gap:8px;padding:14px 18px;border-bottom:1px solid var(--border);
+  align-items:center;cursor:pointer;border-radius:var(--r8);transition:.15s;
+}
+.global-lb-row:hover{background:var(--bg2)}
+.global-lb-row.header{border-bottom:1px solid var(--border2);padding-bottom:10px;cursor:default}
+.global-lb-row.header:hover{background:transparent}
+.gth{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:.8px;text-transform:uppercase}
+.gth:last-child{text-align:right}
+.glb-rank{font-family:'Syne',sans-serif;font-weight:800;font-size:16px}
+.glb-user{display:flex;align-items:center;gap:10px}
+.glb-av{width:32px;height:32px;border-radius:50%;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif}
+.glb-uname{font-weight:500;font-size:14px}
+.glb-uhandle{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3)}
+.glb-stat{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text2)}
+.glb-total{font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:var(--amber);text-align:right}
+
+/* Badges */
+.badge-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.badge{font-size:10px;padding:2px 8px;border-radius:99px;font-family:'JetBrains Mono',monospace}
+.badge-gold{background:rgba(245,183,49,.12);color:var(--amber);border:1px solid rgba(245,183,49,.2)}
+.badge-silver{background:rgba(176,176,184,.1);color:#B0B0B8;border:1px solid rgba(176,176,184,.2)}
+.badge-bronze{background:rgba(205,159,90,.1);color:#CD9F5A;border:1px solid rgba(205,159,90,.2)}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ NAVBAR ═══════════════ -->
+<nav id="main-nav" style="display:none">
+  <div class="nav-logo" onclick="go('main')">
+    <div class="nav-logo-hex">P</div>
+    <div class="nav-logo-text">Prompt<em>Arena</em></div>
+  </div>
+  <div class="nav-center">
+    <button class="nav-link" onclick="go('problems')">Problems</button>
+    <button class="nav-link" onclick="go('enterprise')">Enterprise</button>
+    <button class="nav-link" onclick="go('explore')">Leaderboard</button>
+  </div>
+  <div class="nav-right">
+    <div class="nav-user-pill" onclick="go('dashboard')">
+      <div class="nav-avatar">A</div>
+      <span style="color:var(--text2);font-size:13px">arjun_dev</span>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════ PAGE: LOGIN ═══════════════ -->
+<div class="page" id="page-login">
+  <div class="login-left">
+    <div class="login-left-grid"></div>
+    <div class="login-left-glow"></div>
+    <div class="login-brand">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:28px">
+        <div class="nav-logo-hex" style="width:36px;height:36px;font-size:15px">P</div>
+        <span style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px">Prompt<em style="color:var(--amber);font-style:normal">Arena</em></span>
+      </div>
+      <div class="login-brand-title">Engineer prompts.<br><em>Compete.</em></div>
+      <p class="login-brand-sub">The only platform where your prompt engineering skills get quantified, ranked, and celebrated.</p>
+    </div>
+    <div class="login-stats">
+      <div class="login-stat">
+        <div class="login-stat-num a">247</div>
+        <div class="login-stat-label">TOTAL SUBMISSIONS</div>
+      </div>
+      <div class="login-stat">
+        <div class="login-stat-num t">63</div>
+        <div class="login-stat-label">ACTIVE ENGINEERS</div>
+      </div>
+      <div class="login-stat">
+        <div class="login-stat-num v">92.4</div>
+        <div class="login-stat-label">TOP SCORE</div>
+      </div>
+      <div class="login-stat">
+        <div class="login-stat-num a">4</div>
+        <div class="login-stat-label">OPEN PROBLEMS</div>
+      </div>
+    </div>
+  </div>
+  <div class="login-right">
+    <div class="login-form-title">Welcome back</div>
+    <div class="login-form-sub" id="login-sub">Enter your credentials to access the arena</div>
+    <div id="login-fields">
+      <div class="form-group">
+        <label class="form-label">EMAIL ADDRESS</label>
+        <input class="form-input" type="email" placeholder="you@example.com"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">PASSWORD</label>
+        <input class="form-input" type="password" placeholder="••••••••••"/>
+      </div>
+      <button class="btn-primary" style="width:100%;margin-top:4px" onclick="go('main')">Sign in to Arena →</button>
+      <div class="form-divider">or</div>
+      <div id="login-switch-line" class="login-switch">Don't have an account? <span onclick="toggleAuth()">Create one free</span></div>
+    </div>
+    <div id="signup-fields" style="display:none">
+      <div class="form-group">
+        <label class="form-label">USERNAME</label>
+        <input class="form-input" placeholder="arjun_dev"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">EMAIL ADDRESS</label>
+        <input class="form-input" type="email" placeholder="you@example.com"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">PASSWORD</label>
+        <input class="form-input" type="password" placeholder="min 8 characters"/>
+      </div>
+      <button class="btn-primary" style="width:100%;margin-top:4px" onclick="go('main')">Create account →</button>
+      <div class="login-switch" style="margin-top:16px">Already have an account? <span onclick="toggleAuth()">Sign in</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE: MAIN LANDING ═══════════════ -->
+<div class="page" id="page-main">
+  <nav style="display:flex;align-items:center;justify-content:space-between;padding:0 40px;height:56px;border-bottom:1px solid var(--border);background:rgba(6,6,10,.95);backdrop-filter:blur(16px);flex-shrink:0">
+    <div class="nav-logo">
+      <div class="nav-logo-hex">P</div>
+      <div class="nav-logo-text">Prompt<em>Arena</em></div>
+    </div>
+    <div class="nav-center">
+      <button class="nav-link active">Home</button>
+      <button class="nav-link" onclick="go('problems')">Problems</button>
+      <button class="nav-link" onclick="go('enterprise')">Enterprise</button>
+      <button class="nav-link" onclick="go('explore')">Leaderboard</button>
+    </div>
+    <div class="nav-right">
+      <button class="nav-ghost" onclick="go('login')">Sign in</button>
+      <button class="nav-btn" onclick="go('login')">Join Arena</button>
+    </div>
+  </nav>
+
+  <div class="hero">
+    <div class="hero-bg-grid"></div>
+    <div class="hero-bg-fade"></div>
+    <div class="hero-orb1"></div>
+    <div class="hero-orb2"></div>
+    <div class="hero-inner">
+      <div class="hero-badge">
+        <span class="dot dot-teal pulse"></span>
+        Phase 2 active · Gemini AI judge enabled
+      </div>
+      <h1 class="hero-h1">
+        <span class="ln1">The arena where</span>
+        <span class="amber">prompt engineers</span>
+        <span class="teal">compete.</span>
+      </h1>
+      <p class="hero-sub">Submit AI prompts against real-world challenges. Get scored by NLP analysis, rule checks, and Gemini AI. Climb the ranked leaderboard.</p>
+      <div class="hero-cta">
+        <button class="btn-primary" onclick="go('problems')">Enter the Arena →</button>
+        <button class="btn-outline" onclick="go('explore')">View leaderboard</button>
+      </div>
+      <div class="hero-stats">
+        <div class="h-stat"><div class="h-stat-n a">247</div><div class="h-stat-l">SUBMISSIONS</div></div>
+        <div class="h-stat"><div class="h-stat-n t">63</div><div class="h-stat-l">ENGINEERS</div></div>
+        <div class="h-stat"><div class="h-stat-n v">4</div><div class="h-stat-l">PROBLEMS</div></div>
+        <div class="h-stat"><div class="h-stat-n a">189</div><div class="h-stat-l">AI VERIFIED</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="how-section">
+    <div class="sec-header">
+      <div class="sec-title">How it works</div>
+      <div class="sec-sub">// 3 steps to glory</div>
+    </div>
+    <div class="how-grid">
+      <div class="how-card">
+        <div class="how-num">01</div>
+        <div class="how-icon">⚡</div>
+        <div class="how-title">Pick a challenge</div>
+        <div class="how-desc">Choose from legal, code, analysis, or pitch problems — each with unique scoring constraints.</div>
+      </div>
+      <div class="how-card">
+        <div class="how-num">02</div>
+        <div class="how-icon">✍</div>
+        <div class="how-title">Write your prompt</div>
+        <div class="how-desc">Craft a prompt in our terminal editor. Real-time word count and scoring tips help you optimize.</div>
+      </div>
+      <div class="how-card">
+        <div class="how-num">03</div>
+        <div class="how-icon">🏆</div>
+        <div class="how-title">Climb the board</div>
+        <div class="how-desc">Get scored by 4 layers — universal rules, NLP, custom constraints, and Gemini AI. Earn the champion badge.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="featured-section">
+    <div class="sec-header">
+      <div class="sec-title">Open problems</div>
+      <div class="sec-sub">// compete now</div>
+    </div>
+    <div class="feat-grid">
+      <div class="feat-card" onclick="go('problem')">
+        <div class="feat-cat">text · legal · medium</div>
+        <div class="feat-title">Legal Document Summary</div>
+        <div class="feat-desc">Summarize a 3-page NDA for a non-technical startup founder.</div>
+        <div class="feat-footer">
+          <div class="feat-subs">73 submissions</div>
+          <div class="feat-champ">champion set</div>
+        </div>
+      </div>
+      <div class="feat-card" onclick="go('problem')">
+        <div class="feat-cat">code · html · medium</div>
+        <div class="feat-title">Coffee Shop HTML Page</div>
+        <div class="feat-desc">Generate a complete responsive landing page for a local coffee brand.</div>
+        <div class="feat-footer">
+          <div class="feat-subs">61 submissions</div>
+          <div class="feat-champ">champion set</div>
+        </div>
+      </div>
+      <div class="feat-card" onclick="go('problem')">
+        <div class="feat-cat">analysis · tax · hard</div>
+        <div class="feat-title">Tax Optimization Analysis</div>
+        <div class="feat-desc">Find actionable tax-saving strategies for a freelancer's complex income.</div>
+        <div class="feat-footer">
+          <div class="feat-subs">58 submissions</div>
+          <div style="font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace">no champion yet</div>
+        </div>
+      </div>
+      <div class="feat-card" onclick="go('problem')">
+        <div class="feat-cat">text · pitch · medium</div>
+        <div class="feat-title">Startup Pitch Generator</div>
+        <div class="feat-desc">Create a compelling 2-minute investor pitch for a B2B HR SaaS tool.</div>
+        <div class="feat-footer">
+          <div class="feat-subs">55 submissions</div>
+          <div class="feat-champ">champion set</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE: PROBLEMS LIST ═══════════════ -->
+<div class="page" id="page-problems">
+  <div class="problems-layout">
+    <div class="problems-sidebar">
+      <div class="ps-title">Filter problems</div>
+      <div class="filter-group">
+        <div class="filter-label">Category</div>
+        <button class="filter-btn on">All problems</button>
+        <button class="filter-btn">Text / Writing</button>
+        <button class="filter-btn">Code / HTML</button>
+        <button class="filter-btn">Analysis</button>
+        <button class="filter-btn">Pitch / Creative</button>
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">Difficulty</div>
+        <button class="filter-btn on">All levels</button>
+        <button class="filter-btn">Easy</button>
+        <button class="filter-btn">Medium</button>
+        <button class="filter-btn">Hard</button>
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">Phase</div>
+        <button class="filter-btn">Phase 1 only</button>
+        <button class="filter-btn">Phase 2 active</button>
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">Status</div>
+        <button class="filter-btn">Champion set</button>
+        <button class="filter-btn">Open throne</button>
+        <button class="filter-btn">Not attempted</button>
+      </div>
+    </div>
+    <div class="problems-main">
+      <div class="problems-header">
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px">All Problems <span style="color:var(--text3);font-size:13px;font-family:'JetBrains Mono',monospace;font-weight:400">4 challenges</span></div>
+        <div style="display:flex;gap:8px">
+          <input class="prob-search" placeholder="Search problems…"/>
+          <select class="prob-sort"><option>Sort: Newest</option><option>Sort: Most popular</option><option>Sort: Hardest</option></select>
+        </div>
+      </div>
+      <div class="problems-grid2">
+        <div class="prob-card2" onclick="go('problem')">
+          <div class="pc2-top">
+            <div>
+              <div class="pc2-cat">text · legal</div>
+              <div class="pc2-title">Legal Document Summary</div>
+            </div>
+            <span class="tag tag-amber">medium</span>
+          </div>
+          <div class="pc2-desc">Write a prompt that summarizes a 3-page NDA into clear, non-technical bullet points for a startup founder with no legal background.</div>
+          <div class="pc2-footer">
+            <span class="pc2-stat"><span style="width:6px;height:6px;border-radius:50%;background:var(--teal);display:inline-block"></span>73 submissions</span>
+            <span class="tag tag-teal">phase 2</span>
+            <span class="tag tag-amber">champion set</span>
+          </div>
+        </div>
+        <div class="prob-card2" onclick="go('problem')">
+          <div class="pc2-top">
+            <div>
+              <div class="pc2-cat">code · html</div>
+              <div class="pc2-title">Coffee Shop HTML Page</div>
+            </div>
+            <span class="tag tag-amber">medium</span>
+          </div>
+          <div class="pc2-desc">Generate a complete responsive HTML landing page for a local independent coffee shop, including menu, hero section, and contact.</div>
+          <div class="pc2-footer">
+            <span class="pc2-stat"><span style="width:6px;height:6px;border-radius:50%;background:var(--teal);display:inline-block"></span>61 submissions</span>
+            <span class="tag tag-teal">phase 2</span>
+            <span class="tag tag-amber">champion set</span>
+          </div>
+        </div>
+        <div class="prob-card2" onclick="go('problem')">
+          <div class="pc2-top">
+            <div>
+              <div class="pc2-cat">analysis · tax</div>
+              <div class="pc2-title">Tax Optimization Analysis</div>
+            </div>
+            <span class="tag tag-red">hard</span>
+          </div>
+          <div class="pc2-desc">Analyze a freelancer's annual income structure and produce a ranked list of actionable tax-saving strategies with estimated savings.</div>
+          <div class="pc2-footer">
+            <span class="pc2-stat"><span style="width:6px;height:6px;border-radius:50%;background:var(--teal);display:inline-block"></span>58 submissions</span>
+            <span class="tag tag-teal">phase 2</span>
+            <span class="tag tag-dim">throne open</span>
+          </div>
+        </div>
+        <div class="prob-card2" onclick="go('problem')">
+          <div class="pc2-top">
+            <div>
+              <div class="pc2-cat">text · pitch</div>
+              <div class="pc2-title">Startup Pitch Generator</div>
+            </div>
+            <span class="tag tag-amber">medium</span>
+          </div>
+          <div class="pc2-desc">Create a compelling 2-minute investor pitch narrative for a B2B SaaS tool targeting HR teams, covering problem, solution, and traction.</div>
+          <div class="pc2-footer">
+            <span class="pc2-stat"><span style="width:6px;height:6px;border-radius:50%;background:var(--teal);display:inline-block"></span>55 submissions</span>
+            <span class="tag tag-teal">phase 2</span>
+            <span class="tag tag-amber">champion set</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE: PROBLEM + TERMINAL ═══════════════ -->
+<div class="page" id="page-problem">
+  <div class="terminal-layout">
+    <!-- Problem panel -->
+    <div class="problem-panel">
+      <div class="pp-header">
+        <button class="pp-back" onclick="go('problems')">← back to problems</button>
+        <div class="pp-tag">PROBLEM #001 · TEXT / LEGAL · MEDIUM</div>
+        <div class="pp-title">Legal Document Summary</div>
+        <div class="pp-desc">Write a prompt that instructs Gemini to summarize a 3-page NDA into non-technical bullet points for a startup founder.</div>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+          <span class="tag tag-amber">medium</span>
+          <span class="tag tag-teal">phase 2 active</span>
+          <span class="tag tag-violet">73 submissions</span>
+        </div>
+      </div>
+      <div class="pp-body">
+        <div class="pp-section-title">Source document <span></span></div>
+        <div class="doc-collapse">
+          <button class="doc-collapse-btn" onclick="toggleDoc()">
+            <span>📄 NDA Document — 3 pages</span>
+            <span id="doc-arrow" style="font-size:10px">▶ expand</span>
+          </button>
+          <div class="doc-content" id="doc-content">
+            NON-DISCLOSURE AGREEMENT<br/><br/>
+            This Agreement is entered into as of [DATE] between TechCorp Inc. ("Disclosing Party") and StartupXYZ ("Receiving Party").<br/><br/>
+            1. CONFIDENTIAL INFORMATION includes trade secrets, financial projections, source code, and any data marked as confidential.<br/><br/>
+            2. OBLIGATIONS: Receiving Party shall not disclose information to third parties and shall use reasonable security measures.<br/><br/>
+            3. TERM: This agreement is valid for 24 months from signing date.<br/><br/>
+            4. EXCLUSIONS: Public domain information and independently developed knowledge are excluded.<br/><br/>
+            5. REMEDIES: Breach may result in injunctive relief and monetary damages of up to $500,000.
+          </div>
+        </div>
+
+        <div class="pp-section-title">Scoring rules <span></span></div>
+        <div class="scoring-rules">
+          <div class="rule-item"><span class="rule-sign plus">+</span>Output must contain: liability, obligations, term, confidential</div>
+          <div class="rule-item"><span class="rule-sign plus">+</span>Output length: 150–400 words</div>
+          <div class="rule-item"><span class="rule-sign plus">+</span>Bonus: non-technical, founder, plain english</div>
+          <div class="rule-item"><span class="rule-sign minus">−</span>Avoid: legalese, legal jargon, whereas, hereinafter</div>
+        </div>
+
+        <div class="pp-section-title">Tips <span></span></div>
+        <div class="tips-panel">
+          <div class="tips-header">SCORING TIPS</div>
+          <div class="rule-item" style="padding:4px 0;border:none"><span class="rule-sign plus" style="color:var(--amber)">→</span> Specify audience: "for a non-technical founder"</div>
+          <div class="rule-item" style="padding:4px 0;border:none"><span class="rule-sign plus" style="color:var(--amber)">→</span> Define format: bullet points, numbered list</div>
+          <div class="rule-item" style="padding:4px 0;border:none"><span class="rule-sign plus" style="color:var(--amber)">→</span> Include task verb: summarize, extract, list</div>
+          <div class="rule-item" style="padding:4px 0;border:none"><span class="rule-sign plus" style="color:var(--amber)">→</span> Mention tone: plain English, simple language</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Terminal -->
+    <div class="terminal-panel">
+      <div class="terminal-topbar">
+        <div class="terminal-dots">
+          <div class="tdot tdot-r"></div>
+          <div class="tdot tdot-y"></div>
+          <div class="tdot tdot-g"></div>
+        </div>
+        <div class="terminal-title">prompt_terminal — problem_001.txt</div>
+        <div class="terminal-actions">
+          <span class="tag tag-teal" style="font-size:9px"><span class="dot dot-teal pulse" style="width:5px;height:5px"></span> live scoring</span>
+        </div>
+      </div>
+      <div class="terminal-body">
+        <div class="prompt-line">
+          <div class="prompt-marker">$</div>
+          <textarea class="prompt-textarea" id="prompt-input" placeholder="Write your prompt here…&#10;&#10;Example: Summarize the following NDA for a startup founder who has no legal background. Extract the key obligations, timeline, restrictions, and consequences of breach. Present the output as clear bullet points using simple, everyday language. Avoid legal jargon." oninput="updateMetrics(this)"></textarea>
+        </div>
+        <div class="prompt-meta">
+          <div class="pm-left">
+            <div class="pm-stat">words: <span id="wc-words">0</span></div>
+            <div class="pm-stat">chars: <span id="wc-chars">0</span></div>
+            <div class="pm-stat">tokens (est.): <span id="wc-tokens">0</span></div>
+          </div>
+          <button class="btn-ghost2" onclick="clearPrompt()">clear</button>
+        </div>
+      </div>
+      <div class="submit-bar">
+        <div style="font-size:12px;color:var(--text3);font-family:'JetBrains Mono',monospace">gate: score ≥ 20 to proceed</div>
+        <button class="btn-outline" style="font-size:12px;padding:9px 16px" onclick="go('result')">Save draft</button>
+        <button class="submit-btn-main" onclick="submitAndScore()">Submit to Arena →</button>
+      </div>
+    </div>
+
+    <!-- Score preview -->
+    <div class="score-preview">
+      <div class="sp-title">Live preview</div>
+      <div class="sp-item">
+        <div class="sp-label">Universal <strong id="sp-u">—</strong></div>
+        <div class="sp-bar"><div class="sp-fill sp-fill-a" id="bar-u" style="width:0%"></div></div>
+      </div>
+      <div class="sp-item">
+        <div class="sp-label">NLP <strong id="sp-n">—</strong></div>
+        <div class="sp-bar"><div class="sp-fill sp-fill-b" id="bar-n" style="width:0%"></div></div>
+      </div>
+      <div class="sp-item">
+        <div class="sp-label">Custom <strong id="sp-c">—</strong></div>
+        <div class="sp-bar"><div class="sp-fill sp-fill-c" id="bar-c" style="width:0%"></div></div>
+      </div>
+      <div class="sp-item">
+        <div class="sp-label">Efficiency <strong id="sp-e">—</strong></div>
+        <div class="sp-bar"><div class="sp-fill sp-fill-d" id="bar-e" style="width:0%"></div></div>
+      </div>
+      <div class="sp-total">
+        <div class="sp-total-n" id="sp-total">—</div>
+        <div class="sp-total-l">estimated score</div>
+      </div>
+      <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px">
+        <div class="sp-title">Leaderboard</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px">
+            <span style="color:var(--amber);font-family:'Syne',sans-serif;font-weight:700">#1</span>
+            <span style="color:var(--text2)">priya_nlp</span>
+            <span style="color:var(--amber);font-family:'JetBrains Mono',monospace;font-weight:600">92.4</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px">
+            <span style="color:#B0B0B8;font-family:'Syne',sans-serif;font-weight:700">#2</span>
+            <span style="color:var(--text2)">raj_prompt</span>
+            <span style="color:var(--amber);font-family:'JetBrains Mono',monospace;font-weight:600">85.1</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px">
+            <span style="color:#CD9F5A;font-family:'Syne',sans-serif;font-weight:700">#3</span>
+            <span style="color:var(--text2)">alex_ai</span>
+            <span style="color:var(--amber);font-family:'JetBrains Mono',monospace;font-weight:600">79.8</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;background:var(--teal3);padding:5px 8px;border-radius:var(--r6);border:1px solid var(--teal2)">
+            <span style="color:var(--text3);font-family:'Syne',sans-serif;font-weight:700">—</span>
+            <span style="color:var(--teal)">you</span>
+            <span style="color:var(--text3);font-family:'JetBrains Mono',monospace">pending</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE: RESULT + LEADERBOARD ═══════════════ -->
+<div class="page" id="page-result">
+  <div class="result-layout">
+    <!-- Left: Result -->
+    <div class="result-left">
+      <button class="pp-back" style="margin-bottom:20px" onclick="go('problem')">← back to problem</button>
+      <div class="result-score-hero">
+        <div class="rsh-bg"></div>
+        <div class="score-circle" style="--pct:78">
+          <div class="score-circle-inner">
+            <div class="sc-num">78</div>
+            <div class="sc-max">/100</div>
+          </div>
+        </div>
+        <div class="rsh-title">Strong submission!</div>
+        <div class="rsh-sub">Legal Document Summary · Phase 2 · 73 submissions</div>
+        <div style="display:flex;justify-content:center;gap:8px;margin-top:14px;flex-wrap:wrap">
+          <span class="tag tag-teal">ranked #3</span>
+          <span class="tag tag-amber">ai verified</span>
+          <span class="tag tag-violet">+4 pts efficiency</span>
+        </div>
+      </div>
+
+      <div class="breakdown-cards">
+        <div class="bcard">
+          <div class="bc-l">Universal Score</div>
+          <div class="bc-n" style="color:var(--violet)">38<span style="font-size:14px;color:var(--text3)">/50</span></div>
+          <div class="bc-bar2"><div class="bc-bar2-fill" style="width:76%;background:var(--violet)"></div></div>
+        </div>
+        <div class="bcard">
+          <div class="bc-l">NLP Score</div>
+          <div class="bc-n" style="color:var(--teal)">24<span style="font-size:14px;color:var(--text3)">/30</span></div>
+          <div class="bc-bar2"><div class="bc-bar2-fill" style="width:80%;background:var(--teal)"></div></div>
+        </div>
+        <div class="bcard">
+          <div class="bc-l">Custom Score</div>
+          <div class="bc-n" style="color:var(--amber)">31<span style="font-size:14px;color:var(--text3)">/50</span></div>
+          <div class="bc-bar2"><div class="bc-bar2-fill" style="width:62%;background:var(--amber)"></div></div>
+        </div>
+        <div class="bcard">
+          <div class="bc-l">Efficiency Bonus</div>
+          <div class="bc-n" style="color:var(--red)">4<span style="font-size:14px;color:var(--text3)">/5</span></div>
+          <div class="bc-bar2"><div class="bc-bar2-fill" style="width:80%;background:var(--red)"></div></div>
+        </div>
+      </div>
+
+      <div class="result-rank-badge">
+        <div class="rrb-label">Your rank on this problem</div>
+        <div class="rrb-val">#3 of 73</div>
+      </div>
+
+      <div class="gemini-output">
+        <div class="go-header">
+          <span class="go-badge">GEMINI OUTPUT</span>
+          <span style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace">response_time: 1.42s · 847 tokens</span>
+        </div>
+        <div class="go-text">Here are the key points of the NDA in plain English:<br/><br/>• Both parties must keep shared information strictly confidential for 24 months.<br/>• Confidential info includes trade secrets, financials, code, and anything marked as confidential.<br/>• You cannot share this with third parties or use it for other purposes.<br/>• Publicly available information is not restricted.<br/>• Breaking this agreement could cost up to $500,000 in damages plus legal action.</div>
+      </div>
+
+      <div class="result-actions">
+        <button class="btn-primary" onclick="go('explore')">View global leaderboard</button>
+        <button class="btn-outline" onclick="go('problems')">Try another problem</button>
+      </div>
+    </div>
+
+    <!-- Right: Leaderboard -->
+    <div class="result-right">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:20px;margin-bottom:16px">Problem Leaderboard</div>
+      <div class="lb-tab-row">
+        <button class="lb-tab on">Legal Summary</button>
+        <button class="lb-tab">Coffee Shop</button>
+        <button class="lb-tab">Tax Analysis</button>
+        <button class="lb-tab">Startup Pitch</button>
+      </div>
+      <div class="phase-strip">
+        <span class="phase-strip-icon">◈</span>
+        Phase 2 active — Gemini judge = 60% of final score (73 submissions)
+      </div>
+      <div class="champion-box">
+        <div class="champ-info">
+          <div class="champ-crown">♛</div>
+          <div>
+            <div class="champ-name">priya_nlp</div>
+            <div class="champ-sub">CHAMPION · #1 RANK</div>
+          </div>
+        </div>
+        <div class="champ-score-big">92.4</div>
+      </div>
+      <div class="lb-table">
+        <div class="lb-thead-row">
+          <div class="lb-th">#</div>
+          <div class="lb-th">User</div>
+          <div class="lb-th">Rule</div>
+          <div class="lb-th">AI</div>
+          <div class="lb-th" style="text-align:right">Final</div>
+        </div>
+        <div class="lb-row2">
+          <div class="lb-rank-cell r1">#1</div>
+          <div class="lb-user-cell"><div class="lb-av" style="background:rgba(245,183,49,.15);color:var(--amber)">P</div><span class="lb-uname">priya_nlp</span></div>
+          <div class="lb-score-cell">81.2</div><div class="lb-score-cell">97.8</div><div class="lb-final-cell">92.4</div>
+        </div>
+        <div class="lb-row2">
+          <div class="lb-rank-cell r2">#2</div>
+          <div class="lb-user-cell"><div class="lb-av" style="background:var(--bg3);color:#B0B0B8">R</div><span class="lb-uname">raj_prompt</span></div>
+          <div class="lb-score-cell">78.4</div><div class="lb-score-cell">89.1</div><div class="lb-final-cell">85.1</div>
+        </div>
+        <div class="lb-row2 you">
+          <div class="lb-rank-cell r3">#3</div>
+          <div class="lb-user-cell"><div class="lb-av" style="background:var(--teal2);color:var(--teal)">A</div><span class="lb-uname">arjun_dev</span><span class="lb-you-tag">you</span></div>
+          <div class="lb-score-cell">72.1</div><div class="lb-score-cell">81.3</div><div class="lb-final-cell">78.0</div>
+        </div>
+        <div class="lb-row2">
+          <div class="lb-rank-cell rn">#4</div>
+          <div class="lb-user-cell"><div class="lb-av" style="background:var(--bg3);color:var(--text3)">S</div><span class="lb-uname">sam_dev</span></div>
+          <div class="lb-score-cell">65.3</div><div class="lb-score-cell">74.2</div><div class="lb-final-cell">71.2</div>
+        </div>
+        <div class="lb-row2">
+          <div class="lb-rank-cell rn">#5</div>
+          <div class="lb-user-cell"><div class="lb-av" style="background:var(--bg3);color:var(--text3)">M</div><span class="lb-uname">mia_gpt</span></div>
+          <div class="lb-score-cell">60.1</div><div class="lb-score-cell">69.8</div><div class="lb-final-cell">66.0</div>
+        </div>
+        <div class="lb-row2">
+          <div class="lb-rank-cell rn">#6</div>
+          <div class="lb-user-cell"><div class="lb-av" style="background:var(--bg3);color:var(--text3)">K</div><span class="lb-uname">kai_writes</span></div>
+          <div class="lb-score-cell">55.8</div><div class="lb-score-cell">63.1</div><div class="lb-final-cell">60.4</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE: USER DASHBOARD ═══════════════ -->
+<div class="page" id="page-dashboard">
+  <div class="dashboard-layout">
+    <div class="dash-sidebar">
+      <div class="user-profile-card">
+        <div class="user-avatar-large">A</div>
+        <div class="user-name">Arjun Sharma</div>
+        <div class="user-handle">@arjun_dev</div>
+        <div class="user-rank-tag">Rank #3 Global</div>
+      </div>
+      <div class="dash-mini-stats">
+        <div class="dms"><div class="dms-n a">3</div><div class="dms-l">SOLVED</div></div>
+        <div class="dms"><div class="dms-n t">78.0</div><div class="dms-l">BEST SCORE</div></div>
+        <div class="dms"><div class="dms-n v">247</div><div class="dms-l">GLOBAL SUBS</div></div>
+        <div class="dms"><div class="dms-n a">12</div><div class="dms-l">RANK JUMPS</div></div>
+      </div>
+      <div style="height:1px;background:var(--border);margin:8px 0 16px"></div>
+      <div class="dash-nav-item on"><span class="dash-nav-icon">◻</span>Overview</div>
+      <div class="dash-nav-item"><span class="dash-nav-icon">◈</span>Problem Progress</div>
+      <div class="dash-nav-item"><span class="dash-nav-icon">≡</span>History</div>
+      <div class="dash-nav-item"><span class="dash-nav-icon">◎</span>Achievements</div>
+      <div class="dash-nav-item"><span class="dash-nav-icon">◐</span>Settings</div>
+    </div>
+
+    <div class="dash-main">
+      <!-- Overview cards -->
+      <div class="overview-cards">
+        <div class="ov-card">
+          <div class="ov-card-accent" style="background:var(--amber)"></div>
+          <div class="ov-n" style="color:var(--amber)">78.0</div>
+          <div class="ov-l">Best score (Legal Summary)</div>
+          <div class="ov-change up">↑ +12.4 from last attempt</div>
+        </div>
+        <div class="ov-card">
+          <div class="ov-card-accent" style="background:var(--teal)"></div>
+          <div class="ov-n" style="color:var(--teal)">#3</div>
+          <div class="ov-l">Global ranking</div>
+          <div class="ov-change up">↑ climbed 4 spots today</div>
+        </div>
+        <div class="ov-card">
+          <div class="ov-card-accent" style="background:var(--violet)"></div>
+          <div class="ov-n" style="color:var(--violet)">3/4</div>
+          <div class="ov-l">Problems attempted</div>
+          <div class="ov-change" style="color:var(--text3)">1 problem remaining</div>
+        </div>
+      </div>
+
+      <!-- Problem progress -->
+      <div class="dash-section">
+        <div class="dash-sec-title">Problem progress</div>
+        <div class="progress-list">
+          <div class="prog-item">
+            <div class="prog-row">
+              <div class="prog-name">Legal Document Summary</div>
+              <div class="prog-score">78.0</div>
+            </div>
+            <div class="prog-bar-outer"><div class="prog-bar-inner" style="width:78%"></div></div>
+            <div class="prog-meta">
+              <span class="prog-meta-l">rank #3 of 73 · phase 2</span>
+              <div class="prog-meta-r">
+                <span class="tag tag-teal" style="font-size:9px">ai verified</span>
+                <span class="tag tag-amber" style="font-size:9px">medium</span>
+              </div>
+            </div>
+          </div>
+          <div class="prog-item">
+            <div class="prog-row">
+              <div class="prog-name">Coffee Shop HTML Page</div>
+              <div class="prog-score">65.3</div>
+            </div>
+            <div class="prog-bar-outer"><div class="prog-bar-inner" style="width:65.3%;background:var(--teal)"></div></div>
+            <div class="prog-meta">
+              <span class="prog-meta-l">rank #5 of 61 · phase 2</span>
+              <div class="prog-meta-r">
+                <span class="tag tag-teal" style="font-size:9px">ai verified</span>
+                <span class="tag tag-amber" style="font-size:9px">medium</span>
+              </div>
+            </div>
+          </div>
+          <div class="prog-item">
+            <div class="prog-row">
+              <div class="prog-name">Startup Pitch Generator</div>
+              <div class="prog-score">71.8</div>
+            </div>
+            <div class="prog-bar-outer"><div class="prog-bar-inner" style="width:71.8%;background:var(--violet)"></div></div>
+            <div class="prog-meta">
+              <span class="prog-meta-l">rank #4 of 55 · phase 2</span>
+              <div class="prog-meta-r">
+                <span class="tag tag-teal" style="font-size:9px">ai verified</span>
+                <span class="tag tag-amber" style="font-size:9px">medium</span>
+              </div>
+            </div>
+          </div>
+          <div class="prog-item" style="border-color:var(--bg3);background:var(--bg3)">
+            <div class="prog-row">
+              <div class="prog-name" style="color:var(--text3)">Tax Optimization Analysis</div>
+              <div class="prog-score" style="color:var(--text3)">—</div>
+            </div>
+            <div class="prog-bar-outer"><div class="prog-bar-inner" style="width:0%"></div></div>
+            <div class="prog-meta">
+              <span class="prog-meta-l">not attempted</span>
+              <div class="prog-meta-r"><span class="tag tag-red" style="font-size:9px">hard</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Submission history -->
+      <div class="dash-section">
+        <div class="dash-sec-title">Submission history</div>
+        <div class="hist-table">
+          <div class="hist-thead">
+            <div class="hist-th">Problem</div>
+            <div class="hist-th">Universal</div>
+            <div class="hist-th">AI Judge</div>
+            <div class="hist-th">Rank</div>
+            <div class="hist-th">Final</div>
+          </div>
+          <div class="hist-row">
+            <div class="hist-prob">Legal Document Summary</div>
+            <div class="hist-cell">38/50</div>
+            <div class="hist-cell">81.3</div>
+            <div class="hist-cell">#3</div>
+            <div class="hist-final">78.0</div>
+          </div>
+          <div class="hist-row">
+            <div class="hist-prob">Startup Pitch Generator</div>
+            <div class="hist-cell">35/50</div>
+            <div class="hist-cell">75.2</div>
+            <div class="hist-cell">#4</div>
+            <div class="hist-final">71.8</div>
+          </div>
+          <div class="hist-row">
+            <div class="hist-prob">Coffee Shop HTML Page</div>
+            <div class="hist-cell">30/50</div>
+            <div class="hist-cell">66.8</div>
+            <div class="hist-cell">#5</div>
+            <div class="hist-final">65.3</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Achievements -->
+      <div class="dash-section">
+        <div class="dash-sec-title">Achievements</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <div style="background:var(--bg1);border:1px solid var(--border);border-radius:var(--r10);padding:16px 20px;text-align:center;min-width:120px">
+            <div style="font-size:28px;margin-bottom:6px">🏆</div>
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px">Top 5</div>
+            <div style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace">3 problems</div>
+          </div>
+          <div style="background:var(--bg1);border:1px solid var(--border);border-radius:var(--r10);padding:16px 20px;text-align:center;min-width:120px">
+            <div style="font-size:28px;margin-bottom:6px">⚡</div>
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px">Speed Scorer</div>
+            <div style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace">under 2s response</div>
+          </div>
+          <div style="background:var(--bg1);border:1px solid var(--border);border-radius:var(--r10);padding:16px 20px;text-align:center;min-width:120px">
+            <div style="font-size:28px;margin-bottom:6px">🎯</div>
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px">Sharpshooter</div>
+            <div style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace">score > 70 first try</div>
+          </div>
+          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r10);padding:16px 20px;text-align:center;min-width:120px;opacity:.4">
+            <div style="font-size:28px;margin-bottom:6px">👑</div>
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px">Champion</div>
+            <div style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace">hold #1 rank</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE: ENTERPRISE ═══════════════ -->
+<div class="page" id="page-enterprise">
+  <div class="enterprise-layout">
+    <div class="ent-topbar">
+      <div class="ent-meta">
+        <div>
+          <div class="ent-title-bar">TechCorp Hackathon 2024</div>
+          <div class="ent-session">session_id: ENT-4829 · hosted by TechCorp Inc.</div>
+        </div>
+        <span class="tag tag-teal"><span class="dot dot-teal pulse" style="width:5px;height:5px"></span> live</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:20px">
+        <div class="ent-participants">
+          <div class="ent-part-count">142</div>
+          <div class="ent-part-label">PARTICIPANTS</div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;text-align:right;margin-bottom:2px">TIME REMAINING</div>
+          <div class="ent-timer" id="ent-timer">28:47</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ent-body">
+      <div class="ent-left">
+        <!-- Question progress -->
+        <div class="quiz-progress">
+          <div class="quiz-step done" onclick="">1</div>
+          <div class="quiz-step-line done"></div>
+          <div class="quiz-step current">2</div>
+          <div class="quiz-step-line"></div>
+          <div class="quiz-step">3</div>
+          <div class="quiz-step-line"></div>
+          <div class="quiz-step">4</div>
+        </div>
+
+        <div class="ent-q-num">QUESTION 2 OF 4</div>
+        <div class="ent-q-text">Legal Contract Summarizer</div>
+        <div class="ent-q-desc">Write a prompt that instructs Gemini to summarize the following employment contract for a non-technical candidate. The output must be concise, plain-English bullet points covering key terms, compensation, and obligations.</div>
+
+        <div class="ent-constraints">
+          <div class="ent-con-title">SCORING CONSTRAINTS</div>
+          <div class="ent-con-item"><span class="ent-con-key">must_contain:</span> salary, probation, termination, benefits, obligations</div>
+          <div class="ent-con-item"><span class="ent-con-key">must_not_contain:</span> whereas, hereinafter, pursuant, notwithstanding</div>
+          <div class="ent-con-item"><span class="ent-con-key">output_length:</span> 150 – 350 words</div>
+          <div class="ent-con-item"><span class="ent-con-key">bonus_keywords:</span> simple language, plain English, bullet points</div>
+          <div class="ent-con-item"><span class="ent-con-key">time_bonus:</span> +2 pts if submitted in &lt; 5 min</div>
+        </div>
+
+        <div class="ent-doc">EMPLOYMENT AGREEMENT — This agreement is between GlobalTech Ltd. ("Employer") and [Candidate Name] ("Employee"). Role: Senior Backend Engineer. Start Date: March 1, 2024. Compensation: ₹28,00,000 per annum CTC + 15% performance bonus. Probation: 90 days. Benefits: Health insurance (self + family), 24 PL days, remote-first policy. Termination: Either party may terminate with 60 days written notice. Confidentiality obligations extend 24 months post-employment...</div>
+
+        <!-- Live submissions feed -->
+        <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:.8px;margin-bottom:10px">LIVE SUBMISSIONS</div>
+          <div class="live-feed" id="live-feed">
+            <div class="live-item"><span class="live-user">priya_n</span><span>submitted Q2</span><span class="live-score">88.2</span></div>
+            <div class="live-item"><span class="live-user">rohan_ai</span><span>submitted Q2</span><span class="live-score">74.1</span></div>
+            <div class="live-item"><span class="live-user">sara_dev</span><span>submitted Q2</span><span class="live-score">82.7</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ent-right">
+        <div class="ent-terminal">
+          <div class="ent-term-header">
+            <div class="ent-term-title">
+              <span style="width:8px;height:8px;border-radius:50%;background:var(--teal);display:inline-block"></span>
+              arena_terminal — Q2_submission
+            </div>
+            <div style="display:flex;gap:8px">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3)">0 words</span>
+              <span class="tag tag-violet" style="font-size:9px">phase 2 · ai judge</span>
+            </div>
+          </div>
+          <div class="ent-term-body">
+            <textarea class="ent-prompt-area" placeholder="$ Write your prompt for Question 2 here…&#10;&#10;Be specific about the audience, format, tone, and required keywords.&#10;&#10;Tip: Mention 'plain English', 'bullet points', and ensure output covers salary, probation, termination, and benefits."></textarea>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r8);padding:10px 14px;flex:1;min-width:120px">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:.5px;margin-bottom:6px">ESTIMATED SCORE</div>
+                <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:24px;color:var(--amber)">—</div>
+              </div>
+              <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r8);padding:10px 14px;flex:1;min-width:120px">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:.5px;margin-bottom:6px">YOUR Q1 SCORE</div>
+                <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:24px;color:var(--teal)">84.2</div>
+              </div>
+              <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r8);padding:10px 14px;flex:1;min-width:120px">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:.5px;margin-bottom:6px">RANK SO FAR</div>
+                <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:24px;color:var(--violet)">#8</div>
+              </div>
+            </div>
+          </div>
+          <div class="ent-submit-bar">
+            <div style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;flex:1">one submission per question · no edits after submit</div>
+            <button class="btn-outline" style="font-size:12px;padding:9px 16px">Save draft</button>
+            <button class="ent-next-btn" onclick="entSubmit()">Submit Q2 →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE: EXPLORE / GLOBAL LB ═══════════════ -->
+<div class="page" id="page-explore">
+  <div class="explore-layout">
+    <div class="explore-max">
+      <div class="explore-hero">
+        <div class="exp-hero-bg"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+          <span class="tag tag-teal"><span class="dot dot-teal pulse" style="width:5px;height:5px"></span> live rankings</span>
+          <span class="tag tag-dim">updated in real-time</span>
+        </div>
+        <div class="exp-hero-title">Global Leaderboard</div>
+        <div class="exp-hero-sub">Rankings across all 4 problems, weighted by difficulty and AI judge scores.</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:28px">
+        <div style="background:rgba(245,183,49,.06);border:1px solid rgba(245,183,49,.18);border-radius:var(--r12);padding:20px;text-align:center">
+          <div style="font-size:28px;margin-bottom:6px">🥇</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px">priya_nlp</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);margin:4px 0">avg score: 89.1</div>
+          <div class="badge-row" style="justify-content:center">
+            <span class="badge badge-gold">champion ×2</span>
+            <span class="badge badge-gold">top scorer</span>
+          </div>
+        </div>
+        <div style="background:rgba(176,176,184,.05);border:1px solid rgba(176,176,184,.15);border-radius:var(--r12);padding:20px;text-align:center">
+          <div style="font-size:28px;margin-bottom:6px">🥈</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px">raj_prompt</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);margin:4px 0">avg score: 82.4</div>
+          <div class="badge-row" style="justify-content:center">
+            <span class="badge badge-silver">champion ×1</span>
+            <span class="badge badge-silver">consistent</span>
+          </div>
+        </div>
+        <div style="background:rgba(205,159,90,.05);border:1px solid rgba(205,159,90,.15);border-radius:var(--r12);padding:20px;text-align:center">
+          <div style="font-size:28px;margin-bottom:6px">🥉</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px">arjun_dev</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);margin:4px 0">avg score: 71.7</div>
+          <div class="badge-row" style="justify-content:center">
+            <span class="badge badge-bronze">rising star</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="global-lb-header">
+        <div class="global-lb-title">Full Rankings</div>
+        <span class="tag tag-dim">63 engineers</span>
+      </div>
+      <div style="background:var(--bg1);border:1px solid var(--border);border-radius:var(--r12);overflow:hidden">
+        <div class="global-lb-row header">
+          <div class="gth">#</div>
+          <div class="gth">Engineer</div>
+          <div class="gth">Problems</div>
+          <div class="gth">Avg Score</div>
+          <div class="gth">Champions</div>
+          <div class="gth" style="text-align:right">Total Pts</div>
+        </div>
+        <div class="global-lb-row">
+          <div class="glb-rank r1">1</div>
+          <div class="glb-user"><div class="glb-av" style="background:rgba(245,183,49,.15);color:var(--amber)">P</div><div><div class="glb-uname">priya_nlp</div><div class="glb-uhandle">joined 3 months ago</div></div></div>
+          <div class="glb-stat">4/4</div><div class="glb-stat">89.1</div><div class="glb-stat">2</div><div class="glb-total">356</div>
+        </div>
+        <div class="global-lb-row">
+          <div class="glb-rank r2">2</div>
+          <div class="glb-user"><div class="glb-av" style="background:rgba(176,176,184,.1);color:#B0B0B8">R</div><div><div class="glb-uname">raj_prompt</div><div class="glb-uhandle">joined 2 months ago</div></div></div>
+          <div class="glb-stat">4/4</div><div class="glb-stat">82.4</div><div class="glb-stat">1</div><div class="glb-total">329</div>
+        </div>
+        <div class="global-lb-row" style="background:var(--teal3);border-left:2px solid var(--teal)">
+          <div class="glb-rank r3">3</div>
+          <div class="glb-user"><div class="glb-av" style="background:var(--teal2);color:var(--teal)">A</div><div><div class="glb-uname">arjun_dev <span style="font-size:10px;color:var(--teal);font-family:'JetBrains Mono',monospace">(you)</span></div><div class="glb-uhandle">joined 1 month ago</div></div></div>
+          <div class="glb-stat">3/4</div><div class="glb-stat">71.7</div><div class="glb-stat">0</div><div class="glb-total">215</div>
+        </div>
+        <div class="global-lb-row">
+          <div class="glb-rank rn">4</div>
+          <div class="glb-user"><div class="glb-av" style="background:var(--bg3);color:var(--text3)">S</div><div><div class="glb-uname">sam_dev</div><div class="glb-uhandle">joined 6 weeks ago</div></div></div>
+          <div class="glb-stat">3/4</div><div class="glb-stat">68.2</div><div class="glb-stat">1</div><div class="glb-total">204</div>
+        </div>
+        <div class="global-lb-row">
+          <div class="glb-rank rn">5</div>
+          <div class="glb-user"><div class="glb-av" style="background:var(--bg3);color:var(--text3)">M</div><div><div class="glb-uname">mia_gpt</div><div class="glb-uhandle">joined 3 weeks ago</div></div></div>
+          <div class="glb-stat">4/4</div><div class="glb-stat">64.1</div><div class="glb-stat">0</div><div class="glb-total">256</div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:20px">
+        <button class="btn-outline" onclick="go('problems')">Enter the arena to compete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const pages = ['login','main','problems','problem','result','dashboard','enterprise','explore'];
+const loggedOutPages = ['main','problems','problem'];
+
+function go(page) {
+  pages.forEach(p => {
+    const el = document.getElementById('page-' + p);
+    if (el) el.classList.remove('active');
+  });
+  const target = document.getElementById('page-' + page);
+  if (target) target.classList.add('active');
+  document.getElementById('main-nav').style.display = (page === 'login') ? 'none' : 'flex';
+  window.scrollTo(0,0);
+
+  // Mark active nav link
+  document.querySelectorAll('#main-nav .nav-link').forEach(l => l.classList.remove('active'));
+  const map = {main:'Home',problems:'Problems',enterprise:'Enterprise',explore:'Leaderboard'};
+  document.querySelectorAll('#main-nav .nav-link').forEach(l => {
+    if (l.textContent.trim() === (map[page]||'')) l.classList.add('active');
+  });
+}
+
+function toggleAuth() {
+  const lf = document.getElementById('login-fields');
+  const sf = document.getElementById('signup-fields');
+  const sub = document.getElementById('login-sub');
+  const title = document.querySelector('.login-form-title');
+  if (sf.style.display === 'none') {
+    lf.style.display = 'none'; sf.style.display = 'block';
+    title.textContent = 'Create account'; sub.textContent = 'Join the arena and start competing';
+  } else {
+    sf.style.display = 'none'; lf.style.display = 'block';
+    title.textContent = 'Welcome back'; sub.textContent = 'Enter your credentials to access the arena';
+  }
+}
+
+// Filter buttons
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const group = this.closest('.filter-group');
+    group.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('on'));
+    this.classList.add('on');
+  });
+});
+
+// Doc toggle
+function toggleDoc() {
+  const c = document.getElementById('doc-content');
+  const a = document.getElementById('doc-arrow');
+  const open = c.classList.toggle('open');
+  a.textContent = open ? '▼ collapse' : '▶ expand';
+}
+
+// Prompt metrics
+let debounce;
+function updateMetrics(el) {
+  clearTimeout(debounce);
+  debounce = setTimeout(() => {
+    const text = el.value.trim();
+    const words = text ? text.split(/\s+/).length : 0;
+    const chars = text.length;
+    const tokens = Math.ceil(words * 1.33);
+    document.getElementById('wc-words').textContent = words;
+    document.getElementById('wc-chars').textContent = chars;
+    document.getElementById('wc-tokens').textContent = tokens;
+    // Simulate live scoring
+    if (words > 5) {
+      const u = Math.min(50, Math.floor(words * 1.2));
+      const n = Math.min(30, Math.floor(words * .8));
+      const c2 = Math.min(50, Math.floor(words * 1.1));
+      const e = Math.min(5, Math.floor(3 + (tokens < 80 ? 2 : 0)));
+      const total = Math.round((u*.6)+(c2*.4)+(n*.2)+e);
+      document.getElementById('sp-u').textContent = u+'/50';
+      document.getElementById('sp-n').textContent = n+'/30';
+      document.getElementById('sp-c').textContent = c2+'/50';
+      document.getElementById('sp-e').textContent = e+'/5';
+      document.getElementById('sp-total').textContent = total;
+      document.getElementById('bar-u').style.width = (u/50*100)+'%';
+      document.getElementById('bar-n').style.width = (n/30*100)+'%';
+      document.getElementById('bar-c').style.width = (c2/50*100)+'%';
+      document.getElementById('bar-e').style.width = (e/5*100)+'%';
+    }
+  }, 200);
+}
+
+function clearPrompt() {
+  document.getElementById('prompt-input').value = '';
+  ['wc-words','wc-chars','wc-tokens'].forEach(id => document.getElementById(id).textContent = '0');
+  ['sp-u','sp-n','sp-c','sp-e'].forEach(id => document.getElementById(id).textContent = '—');
+  document.getElementById('sp-total').textContent = '—';
+  ['bar-u','bar-n','bar-c','bar-e'].forEach(id => document.getElementById(id).style.width='0%');
+}
+
+function submitAndScore() {
+  const btn = document.querySelector('.submit-btn-main');
+  const input = document.getElementById('prompt-input');
+  if (!input.value.trim()) {
+    input.style.borderColor = 'rgba(255,87,87,.5)';
+    setTimeout(() => input.style.borderColor = '', 1200);
+    return;
+  }
+  btn.textContent = '⟳ Scoring…'; btn.style.opacity = '.7'; btn.disabled = true;
+  setTimeout(() => { btn.textContent='Submit to Arena →'; btn.style.opacity=''; btn.disabled=false; go('result'); }, 1800);
+}
+
+// Enterprise timer
+let secs = 28*60+47;
+function tick() {
+  const m = Math.floor(secs/60).toString().padStart(2,'0');
+  const s = (secs%60).toString().padStart(2,'0');
+  const el = document.getElementById('ent-timer');
+  if (el) el.textContent = m+':'+s;
+  if (secs > 0) secs--;
+}
+setInterval(tick, 1000);
+
+function entSubmit() {
+  const btn = document.querySelector('.ent-next-btn');
+  btn.textContent = '⟳ Submitting…'; btn.disabled = true;
+  // Add live feed item
+  setTimeout(() => {
+    const feed = document.getElementById('live-feed');
+    const item = document.createElement('div');
+    item.className = 'live-item';
+    item.innerHTML = '<span class="live-user">you</span><span>submitted Q2</span><span class="live-score">—</span>';
+    feed.insertBefore(item, feed.firstChild);
+    btn.textContent = 'Next: Q3 →'; btn.disabled = false;
+  }, 1400);
+}
+
+// Lb tab switching
+document.querySelectorAll('.lb-tab').forEach(t => {
+  t.addEventListener('click', function() {
+    this.closest('.lb-tab-row').querySelectorAll('.lb-tab').forEach(x => x.classList.remove('on'));
+    this.classList.add('on');
+  });
+});
+
+// Start on login
+go('login');
+</script>
+</body>
+</html>
